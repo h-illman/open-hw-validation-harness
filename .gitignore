@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+
+# Tooling
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Editor/OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Exclude everything in artifacts but keep the directories
+artifacts/logs/*
+!artifacts/logs/.gitkeep
+artifacts/reports/*
+!artifacts/reports/.gitkeep
+artifacts/waves/*
+!artifacts/waves/.gitkeep

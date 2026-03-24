@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "open-hw-validation-harness"
+version = "0.1.0"
+description = "An open-source, simulation-first hardware validation harness for FPGA and board-level digital designs."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT License"}
+dependencies = [
+    "pytest>=7.0.0",
+    "pyyaml>=6.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]

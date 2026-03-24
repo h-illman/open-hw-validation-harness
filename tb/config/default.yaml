@@ -1,0 +1,11 @@
+# Open Hardware Validation Harness - Default Configuration
+
+project: open-hw-validation-harness
+phase: 1
+backend: sim_backend
+
+artifacts:
+  base_path: artifacts
+  logs: artifacts/logs
+  reports: artifacts/reports
+  waves: artifacts/waves
