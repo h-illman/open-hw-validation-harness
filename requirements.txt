@@ -1,2 +1,20 @@
-pytest>=7.0.0
-pyyaml>=6.0
+# requirements.txt
+#
+# Phase 1 dependencies (kept as-is)
+# ----------------------------------
+pytest>=7.4
+
+# Phase 2 additions
+# ----------------------------------
+# cocotb: Python-driven hardware simulation framework.
+#   Lets us write test logic in Python that runs inside a simulator
+#   (Verilator in this project) and drives/reads RTL signals directly.
+cocotb>=1.9
+
+# cocotb-bus: optional signal bus utilities (BFMs).
+#   Not required for Phase 2, but a natural Phase 3 addition.
+# cocotb-bus>=0.2
+
+# pytest-xml: produces JUnit XML reports from pytest runs.
+#   Used by run_regression.py to parse pass/fail results.
+pytest-xml>=0.1
