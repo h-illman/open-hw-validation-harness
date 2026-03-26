@@ -1,67 +1,54 @@
-# sim/cocotb/Makefile
+# sim/periph_ctrl/Makefile
 #
-# Drives the cocotb simulation for rtl/example_dut/reg8.v using Verilator.
+# Drives the cocotb simulation for rtl/example_dut/periph_ctrl.v
+# using Verilator.
 #
 # Usage:
 #   make            -> compile + run all tests, produce waveform
-#   make clean      -> remove build artefacts (not waves)
-#   make waves      -> open waveform in GTKWave (requires GTKWave installed)
+#   make clean::    -> remove build artefacts
+#   make waves      -> open waveform in GTKWave
 #
-# How this works:
-#   cocotb ships a set of Makefiles that know how to link your Python tests
-#   with a simulator.  We set the required variables and include their rules.
-#   Verilator translates the Verilog to C++, compiles it, and runs the
-#   simulation.  cocotb hooks into Verilator via the VPI/DPI interface.
-#
-# Variables:
-#   SIM          - which simulator backend cocotb uses
-#   TOPLEVEL_LANG - HDL language of the top module
-#   TOPLEVEL     - name of the Verilog top module (must match module name)
-#   MODULE       - Python test file (without .py extension)
-#   VERILOG_SOURCES - path(s) to the HDL source(s)
-#   WAVES        - set to 1 to enable VCD waveform dump
-#   SIM_BUILD    - where Verilator build artefacts go
-#   COCOTB_RESULTS_FILE - path for the JUnit-style XML results file
+# Structure mirrors sim/cocotb/Makefile (Phase 2) for consistency.
+# Key difference: COCOTB_TEST_MODULES is used instead of the deprecated MODULE.
 
 # ---------------------------------------------------------------------------
-# Repo root (two levels up from this Makefile)
+# Repo root (two levels up from this Makefile: sim/periph_ctrl/ → repo root)
 # ---------------------------------------------------------------------------
-REPO_ROOT := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/../..)
+REPO_ROOT := $(abspath $(CURDIR)/../..)
 
 # ---------------------------------------------------------------------------
 # Simulator settings
 # ---------------------------------------------------------------------------
 SIM           := verilator
 TOPLEVEL_LANG := verilog
-TOPLEVEL      := reg8
-MODULE        := test_reg8
+TOPLEVEL      := periph_ctrl
+
+# Use the non-deprecated variable (avoids the MODULE warning from Phase 2)
+COCOTB_TEST_MODULES := test_periph_ctrl
 
 # ---------------------------------------------------------------------------
 # HDL sources
 # ---------------------------------------------------------------------------
-VERILOG_SOURCES := $(REPO_ROOT)/rtl/example_dut/reg8.v
+VERILOG_SOURCES := $(REPO_ROOT)/rtl/example_dut/periph_ctrl.v
 
 # ---------------------------------------------------------------------------
 # Waveform and artefact paths
 # ---------------------------------------------------------------------------
 WAVES     := 1
 WAVE_DIR  := $(REPO_ROOT)/artifacts/waves
-SIM_BUILD := $(REPO_ROOT)/artifacts/sim_build/reg8
+SIM_BUILD := $(REPO_ROOT)/artifacts/sim_build/periph_ctrl
 
-# Extra Verilator flags: generate VCD, trace depth
 EXTRA_ARGS := --trace --trace-depth 5
 
-# Where cocotb writes the JUnit XML results file
-COCOTB_RESULTS_FILE := $(REPO_ROOT)/artifacts/results_reg8.xml
+COCOTB_RESULTS_FILE := $(REPO_ROOT)/artifacts/results_periph_ctrl.xml
 
 # ---------------------------------------------------------------------------
-# Include cocotb's built-in Makefile rules
-# (cocotb installs these; the path is resolved via cocotb-config)
+# Include cocotb's built-in simulation rules
 # ---------------------------------------------------------------------------
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 # ---------------------------------------------------------------------------
-# Post-run: copy the VCD into the waves directory
+# Copy VCD waveform to artifacts/waves/
 # ---------------------------------------------------------------------------
 .PHONY: copy-waves
 copy-waves:
@@ -74,23 +61,21 @@ copy-waves:
 	fi
 
 # ---------------------------------------------------------------------------
-# Open waveform in GTKWave (optional convenience target)
+# Open waveform in GTKWave
 # ---------------------------------------------------------------------------
 .PHONY: waves
 waves:
 	@VCD=$$(ls $(WAVE_DIR)/*.vcd 2>/dev/null | head -1); \
 	if [ -z "$$VCD" ]; then \
-	    echo "No waveform found. Run 'make' first."; \
-	    exit 1; \
+	    echo "No waveform found. Run 'make' first."; exit 1; \
 	fi; \
-	echo "Opening $$VCD in GTKWave..."; \
 	gtkwave "$$VCD" &
 
 # ---------------------------------------------------------------------------
-# Clean build artefacts (keep waves)
+# Clean (double-colon to avoid conflict with cocotb's clean:: target)
 # ---------------------------------------------------------------------------
 .PHONY: clean
-clean:
+clean::
 	rm -rf $(SIM_BUILD)
 	rm -f $(COCOTB_RESULTS_FILE)
-	@echo "Build artefacts cleaned. Waveforms in $(WAVE_DIR) are preserved."
+	@echo "Build artefacts cleaned. Waveforms in $(WAVE_DIR) preserved."
