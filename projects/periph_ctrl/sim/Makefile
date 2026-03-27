@@ -1,38 +1,34 @@
-# sim/periph_ctrl/Makefile
+# projects/periph_ctrl/sim/Makefile
 #
-# Drives the cocotb simulation for rtl/example_dut/periph_ctrl.v
-# using Verilator.
+# Simulation Makefile for the periph_ctrl project.
+# Drives Verilator + cocotb for projects/periph_ctrl/rtl/periph_ctrl.v.
 #
 # Usage:
 #   make            -> compile + run all tests, produce waveform
+#   make copy-waves -> copy VCD to artifacts/waves/
 #   make clean::    -> remove build artefacts
 #   make waves      -> open waveform in GTKWave
-#
-# Structure mirrors sim/cocotb/Makefile (Phase 2) for consistency.
-# Key difference: COCOTB_TEST_MODULES is used instead of the deprecated MODULE.
 
 # ---------------------------------------------------------------------------
-# Repo root (two levels up from this Makefile: sim/periph_ctrl/ → repo root)
+# Repo root: projects/periph_ctrl/sim/ -> up 3 levels
 # ---------------------------------------------------------------------------
-REPO_ROOT := $(abspath $(CURDIR)/../..)
+REPO_ROOT := $(abspath $(CURDIR)/../../..)
 
 # ---------------------------------------------------------------------------
 # Simulator settings
 # ---------------------------------------------------------------------------
-SIM           := verilator
-TOPLEVEL_LANG := verilog
-TOPLEVEL      := periph_ctrl
-
-# Use the non-deprecated variable (avoids the MODULE warning from Phase 2)
+SIM                 := verilator
+TOPLEVEL_LANG       := verilog
+TOPLEVEL            := periph_ctrl
 COCOTB_TEST_MODULES := test_periph_ctrl
 
 # ---------------------------------------------------------------------------
 # HDL sources
 # ---------------------------------------------------------------------------
-VERILOG_SOURCES := $(REPO_ROOT)/rtl/example_dut/periph_ctrl.v
+VERILOG_SOURCES := $(abspath $(CURDIR)/../rtl/periph_ctrl.v)
 
 # ---------------------------------------------------------------------------
-# Waveform and artefact paths
+# Artifact paths
 # ---------------------------------------------------------------------------
 WAVES     := 1
 WAVE_DIR  := $(REPO_ROOT)/artifacts/waves
@@ -43,12 +39,12 @@ EXTRA_ARGS := --trace --trace-depth 5
 COCOTB_RESULTS_FILE := $(REPO_ROOT)/artifacts/results_periph_ctrl.xml
 
 # ---------------------------------------------------------------------------
-# Include cocotb's built-in simulation rules
+# cocotb built-in rules
 # ---------------------------------------------------------------------------
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 # ---------------------------------------------------------------------------
-# Copy VCD waveform to artifacts/waves/
+# Copy waveform
 # ---------------------------------------------------------------------------
 .PHONY: copy-waves
 copy-waves:
@@ -66,16 +62,15 @@ copy-waves:
 .PHONY: waves
 waves:
 	@VCD=$$(ls $(WAVE_DIR)/*.vcd 2>/dev/null | head -1); \
-	if [ -z "$$VCD" ]; then \
-	    echo "No waveform found. Run 'make' first."; exit 1; \
-	fi; \
+	if [ -z "$$VCD" ]; then echo "No waveform. Run 'make' first."; exit 1; fi; \
 	gtkwave "$$VCD" &
 
 # ---------------------------------------------------------------------------
-# Clean (double-colon to avoid conflict with cocotb's clean:: target)
+# Clean
 # ---------------------------------------------------------------------------
 .PHONY: clean
 clean::
 	rm -rf $(SIM_BUILD)
 	rm -f $(COCOTB_RESULTS_FILE)
-	@echo "Build artefacts cleaned. Waveforms in $(WAVE_DIR) preserved."
+	rm -f $(CURDIR)/*.vcd
+	@echo "Cleaned."

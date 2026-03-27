@@ -1,9 +1,9 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1774500207" />
-    <testcase name="test_reset" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="33" time="0.0006244182586669922" sim_time_ns="40.0" ratio_time="64059.62581137839" />
-    <testcase name="test_load" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="60" time="0.0005497932434082031" sim_time_ns="105.0" ratio_time="190980.88464874242" />
-    <testcase name="test_hold" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="83" time="0.0003936290740966797" sim_time_ns="75.0" ratio_time="190534.70623864324" />
-    <testcase name="test_reset_overrides_enable" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="115" time="0.00036787986755371094" sim_time_ns="40.0" ratio_time="108731.14711600778" />
+    <property name="random_seed" value="1774592010" />
+    <testcase name="test_reset" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="1" time="0.0006775856018066406" sim_time_ns="40.0" ratio_time="59033.13159746657" />
+    <testcase name="test_load" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="1" time="0.0007061958312988281" sim_time_ns="105.0" ratio_time="148683.97029034435" />
+    <testcase name="test_hold" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="1" time="0.0006177425384521484" sim_time_ns="75.0" ratio_time="121409.80316480124" />
+    <testcase name="test_reset_overrides_enable" classname="test_reg8" file="/mnt/d/CADDesigns/CODING/ActualCode/AntigravityProjects/open-hw-validation-harness/sim/cocotb/test_reg8.py" lineno="1" time="0.0002677440643310547" sim_time_ns="40.0" ratio_time="149396.40249332145" />
   </testsuite>
 </testsuites>

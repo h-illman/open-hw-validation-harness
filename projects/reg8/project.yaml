@@ -1,0 +1,26 @@
+# projects/reg8/project.yaml
+#
+# Project manifest for the reg8 example.
+# This file tells the framework everything it needs to know about this project.
+# Copy this file (along with the project folder) to create your own project.
+
+name: reg8
+description: "Phase 2 bring-up example: 8-bit synchronous register with enable and active-low reset"
+version: "1.0.0"
+phase: 2
+
+dut:
+  top_module: reg8
+  sources:
+    - rtl/reg8.v
+
+sim:
+  tool: verilator
+  test_module: test_reg8
+  timeout_ns: 10000
+
+# Artifacts produced by this project's simulation run.
+# Paths are relative to the repo root artifacts/ directory.
+artifacts:
+  results_xml: artifacts/results_reg8.xml
+  waves_dir:   artifacts/waves/

@@ -1,0 +1,33 @@
+# projects/template/project.yaml
+#
+# Template project manifest.
+# Copy this entire `template/` folder, rename it to your project name,
+# and fill in the fields below.
+#
+# Steps to add your own project:
+#   1. Copy projects/template/ to projects/your_project_name/
+#   2. Edit this file (project.yaml) with your project details
+#   3. Put your Verilog/SystemVerilog source(s) in rtl/
+#   4. Write your cocotb tests in sim/test_<your_module>.py
+#   5. Update sim/Makefile: set TOPLEVEL, COCOTB_TEST_MODULES, VERILOG_SOURCES
+#   6. Run: cd projects/your_project_name/sim && make
+#   7. Your project will be auto-discovered by run_regression.py
+
+name: your_project_name          # must match the folder name in projects/
+description: "Brief description of what this DUT does"
+version: "0.1.0"
+phase: 4                         # or whichever phase this belongs to
+
+dut:
+  top_module: your_top_module    # must match the Verilog module name exactly
+  sources:
+    - rtl/your_top_module.v      # list all source files needed for compilation
+
+sim:
+  tool: verilator                # currently the only supported tool
+  test_module: test_your_module  # filename of your cocotb test file (no .py)
+  timeout_ns: 10000              # simulation timeout in nanoseconds
+
+artifacts:
+  results_xml: artifacts/results_your_project_name.xml
+  waves_dir:   artifacts/waves/

@@ -1,0 +1,23 @@
+# projects/periph_ctrl/project.yaml
+#
+# Project manifest for the periph_ctrl example.
+# This is the Phase 3 MVP validation target.
+
+name: periph_ctrl
+description: "Phase 3 MVP: register-mapped peripheral controller with GPIO, control, status, and ID registers"
+version: "1.0.0"
+phase: 3
+
+dut:
+  top_module: periph_ctrl
+  sources:
+    - rtl/periph_ctrl.v
+
+sim:
+  tool: verilator
+  test_module: test_periph_ctrl
+  timeout_ns: 10000
+
+artifacts:
+  results_xml: artifacts/results_periph_ctrl.xml
+  waves_dir:   artifacts/waves/
