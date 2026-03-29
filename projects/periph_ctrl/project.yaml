@@ -21,3 +21,14 @@ sim:
 artifacts:
   results_xml: artifacts/results_periph_ctrl.xml
   waves_dir:   artifacts/waves/
+
+# ---------------------------------------------------------------------------
+# Phase 5: target board (optional — enables target-aware checks)
+# ---------------------------------------------------------------------------
+target:
+  board: de10_standard
+  clock_source: CLOCK_50
+  target_clock_mhz: 50
+  resource_estimate:
+    luts: 85
+    ffs:  64

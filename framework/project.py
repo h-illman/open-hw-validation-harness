@@ -11,11 +11,16 @@
 #   - they write a project.yaml describing their DUT
 #   - the runner calls discover_projects() and picks them up automatically
 #   - no framework code needs to change when a project is added
+#
+# Phase 5 addition:
+#   ProjectManifest gains an optional `target` dict populated from the
+#   project.yaml `target:` block.  Existing projects without a target block
+#   are unaffected — target defaults to None and everything still works.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 try:
     import yaml
@@ -43,6 +48,23 @@ class ProjectManifest:
     results_xml: str
     waves_dir:   str
 
+    # Phase 5: optional target/board block (None if not declared in project.yaml).
+    #
+    # Populated from:
+    #   target:
+    #     board: de10_standard            # required for target-aware validation
+    #     clock_source: CLOCK_50          # optional
+    #     target_clock_mhz: 50           # optional
+    #     io_standard: "3.3V LVTTL"      # optional
+    #     resource_estimate:             # optional
+    #       luts: 500
+    #       ffs:  200
+    #
+    # Absence of the target block is not an error — simulation validation
+    # runs normally.  Target-aware checks simply will not run unless --target
+    # is supplied on the CLI or this block is present.
+    target: Optional[dict] = field(default=None)
+
     # Set by the loader, not from yaml
     project_dir: Path = field(default=None)  # absolute path to projects/<name>/
     sim_dir:     Path = field(default=None)  # absolute path to projects/<name>/sim/
@@ -66,6 +88,10 @@ def load_manifest(yaml_path: Path, repo_root: Path) -> ProjectManifest:
     project_dir = yaml_path.parent
     sim_dir     = project_dir / "sim"
 
+    # Phase 5: read the optional target block as-is (dict or None).
+    # Existing projects without a target: key are unaffected.
+    target_block = data.get("target", None)
+
     return ProjectManifest(
         name        = data["name"],
         description = data.get("description", ""),
@@ -78,6 +104,7 @@ def load_manifest(yaml_path: Path, repo_root: Path) -> ProjectManifest:
         timeout_ns  = data["sim"].get("timeout_ns", 10000),
         results_xml = data["artifacts"]["results_xml"],
         waves_dir   = data["artifacts"]["waves_dir"],
+        target      = target_block,
         project_dir = project_dir,
         sim_dir     = sim_dir,
         repo_root   = repo_root,

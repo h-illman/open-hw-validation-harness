@@ -24,3 +24,15 @@ sim:
 artifacts:
   results_xml: artifacts/results_reg8.xml
   waves_dir:   artifacts/waves/
+
+# ---------------------------------------------------------------------------
+# Phase 5: target board (optional — enables target-aware checks)
+# Remove or comment out if you are not targeting a specific board.
+# ---------------------------------------------------------------------------
+target:
+  board: de0_cv          # de0_cv or de10_standard
+  clock_source: CLOCK_50
+  target_clock_mhz: 50
+  resource_estimate:
+    luts: 12
+    ffs:  8

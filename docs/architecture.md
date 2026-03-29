@@ -1,45 +1,50 @@
 # Architecture
 
-This document describes the structure of the framework as of Phase 4.
+This document describes the structure of the framework as of Phase 5.
 
 ---
 
 ## Layer diagram
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    User Entry Point                     │
-│           scripts/run_regression.py                     │
-│   --list  /  --project <name>  /  --verbose             │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-┌───────────────────────▼─────────────────────────────────┐
-│                  Framework Layer                        │
-│   framework/project.py       (manifest discovery)      │
-│   framework/result_parser.py (JUnit XML parsing)       │
-│   framework/tool_check.py    (tool availability)       │
-└───────────────────────┬─────────────────────────────────┘
-                        │  reads project.yaml from each project
-┌───────────────────────▼─────────────────────────────────┐
-│                  Project Layer                          │
-│   projects/<name>/                                      │
-│     project.yaml       <- manifest                      │
-│     rtl/               <- HDL sources                   │
-│     sim/Makefile       <- drives Verilator + cocotb     │
-│     sim/test_<name>.py <- cocotb tests                  │
-│     sim/reg_driver.py  <- optional reusable driver      │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-┌───────────────────────▼─────────────────────────────────┐
-│               Simulation Backend                        │
-│   Verilator   (compiles Verilog → C++ → binary)        │
-│   cocotb VPI  (Python ↔ simulator signal bridge)       │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-┌───────────────────────▼─────────────────────────────────┐
-│                    DUT (your design)                    │
-│   Any Verilog/SystemVerilog RTL module                  │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      User Entry Point                       │
+│              scripts/run_regression.py                      │
+│  --list / --project / --verbose                             │
+│  --target / --target-only / --list-boards / --board-info    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+          ┌────────────────┴──────────────────┐
+          │                                   │
+┌─────────▼──────────────────┐   ┌────────────▼───────────────┐
+│     Framework Layer        │   │  Target-Aware Layer (P5)   │
+│  framework/project.py      │   │  framework/target_checker.py│
+│  framework/result_parser.py│   │  framework/boards/          │
+│  framework/tool_check.py   │   │    base_board.py            │
+└─────────┬──────────────────┘   │    common_checks.py         │
+          │                      │    de10_standard.py         │
+          │ reads project.yaml   │    de0_cv.py                │
+          │ (incl. target: block)│    registry.py              │
+          │                      └────────────────────────────┘
+┌─────────▼──────────────────────────────────────────────────┐
+│                      Project Layer                          │
+│  projects/<name>/                                           │
+│    project.yaml        <- manifest (+ optional target: P5) │
+│    rtl/                <- HDL sources                       │
+│    sim/Makefile        <- drives Verilator + cocotb         │
+│    sim/test_<n>.py     <- cocotb tests                      │
+└─────────┬──────────────────────────────────────────────────┘
+          │
+┌─────────▼──────────────────────────────────────────────────┐
+│                   Simulation Backend                        │
+│  Verilator   (compiles Verilog -> C++ -> binary)           │
+│  cocotb VPI  (Python <-> simulator signal bridge)          │
+└─────────┬──────────────────────────────────────────────────┘
+          │
+┌─────────▼──────────────────────────────────────────────────┐
+│                     DUT (your design)                       │
+│  Any Verilog/SystemVerilog RTL module                       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -53,86 +58,92 @@ The runner calls `framework/project.py:discover_projects()` which:
 3. Returns a list of `ProjectManifest` objects
 4. Skips the `template/` folder (not a runnable project)
 
-The runner never has a hardcoded list of projects. Adding a project means
-dropping a folder into `projects/` — nothing else changes.
+The runner never has a hardcoded list of projects.
 
 ---
 
-## The project.yaml manifest
+## The project.yaml manifest (Phase 5 additions)
 
-Each project's manifest tells the framework:
+The existing manifest schema is unchanged.  Phase 5 adds an optional
+`target:` block that the existing simulation path ignores completely.
 
 ```yaml
-name:        reg8           # folder name, used as project ID
+name:        my_design
 dut:
-  top_module: reg8          # Verilog module name
-  sources: [rtl/reg8.v]    # source files to compile
+  top_module: my_top_module
+  sources: [rtl/my_top_module.v]
 sim:
   tool: verilator
-  test_module: test_reg8    # cocotb test file (no .py)
+  test_module: test_my_design
+  timeout_ns: 10000
 artifacts:
-  results_xml: artifacts/results_reg8.xml
+  results_xml: artifacts/results_my_design.xml
   waves_dir:   artifacts/waves/
+
+# Phase 5 — optional target block
+target:
+  board: de10_standard          # required for target-aware checks
+  clock_source: CLOCK_50        # optional
+  target_clock_mhz: 50         # optional
+  resource_estimate:            # optional
+    luts: 500
+    ffs:  200
 ```
 
-This manifest is the contract between a project and the framework.
+---
+
+## Board profile system (Phase 5)
+
+```
+framework/boards/
+  __init__.py
+  base_board.py        <- BoardProfile ABC + BoardReadinessReport dataclass
+  common_checks.py     <- reusable check functions (shared by all boards)
+  registry.py          <- central registry: board_id -> BoardProfile instance
+  de10_standard.py     <- DE10-Standard profile
+  de0_cv.py            <- DE0-CV profile
+```
+
+`BoardProfile` is the contract every supported board must implement.  It
+declares board metadata (clocks, I/O standards, resource budgets) and
+a `check_project(manifest)` method that runs the board's checks and returns
+a `BoardReadinessReport`.
+
+`common_checks.py` contains the actual check logic.  Board profiles call
+these functions rather than re-implementing checks per board.  Adding a new
+board means writing ~40 lines to declare metadata and call the check functions.
 
 ---
 
-## Key design decisions
-
-**Why `projects/` with one folder per DUT?**
-Each project is fully self-contained — RTL, tests, Makefile, and manifest
-in one place. You can copy, share, or delete a project without touching
-anything else. It also makes the discovery model trivial.
-
-**Why a project.yaml manifest?**
-The runner needs to know the top module name, source files, and artifact
-paths without parsing Verilog or Makefiles. The YAML manifest is the
-simplest, most readable way to express that. It also sets up Phase 5:
-target-aware fields (e.g. `target_board:`) can be added to the manifest
-without changing the framework core.
-
-**Why a `framework/` Python package?**
-Extracting discovery, result parsing, and tool checking into a package
-means the runner is thin (orchestration only) and the utilities are
-testable and reusable. It also means other scripts or tools can import
-`framework.project` without copy-pasting code.
-
-**Why keep the Makefile per project?**
-cocotb's build system is Makefile-based. Keeping one Makefile per project
-means each project can be run standalone (`cd projects/x/sim && make`)
-without the runner. This is important for developer iteration speed.
-
----
-
-## Artifact layout
+## Artifact layout (Phase 5 additions)
 
 ```
 artifacts/
-├── waves/                      <- VCD waveforms from all projects
-│   └── dump.vcd                <- overwritten on each run
-├── sim_build/
-│   ├── reg8/                   <- Verilator C++ build for reg8
-│   └── periph_ctrl/            <- Verilator C++ build for periph_ctrl
-├── results_reg8.xml            <- JUnit XML from reg8
-└── results_periph_ctrl.xml     <- JUnit XML from periph_ctrl
+├── waves/                       <- VCD waveforms (unchanged)
+├── sim_build/                   <- Verilator build cache (unchanged)
+├── results_reg8.xml             <- JUnit XML from reg8 (unchanged)
+├── results_periph_ctrl.xml      <- JUnit XML from periph_ctrl (unchanged)
+└── reports/                     <- NEW: Phase 5 target readiness reports
+    ├── reg8/
+    │   └── target_readiness.json
+    └── periph_ctrl/
+        └── target_readiness.json
 ```
 
 ---
 
-## Phase 5 and 6 extension points
+## Phase 6 extension points
 
-**Phase 5 — Target-aware checks:**
-Add `target_board:` and `constraints:` fields to `project.yaml`.
-The framework layer gains a `target_checker.py` module that reads these
-fields and runs board-specific validation (pin compatibility, clock
-requirements, resource estimates). The runner gains a `--target` flag.
-No changes to existing project structure.
+**Phase 5 already prepared these hooks:**
 
-**Phase 6 — Real hardware backend:**
-The driver layer (e.g. `reg_driver.py`) already marks the boundary between
-test logic and the simulation backend. Swapping Verilator for a JTAG or
-Avalon hardware backend means replacing the driver's implementation, not
-the test code above it. The `framework/` package gains a `backends/`
-submodule that the runner can select via a `--backend` flag.
+`BoardProfile.check_project()` runs pre-lab checks.  Phase 6 can add
+`BoardProfile.program()` and `BoardProfile.capture_output()` alongside it
+without touching Phase 5 check logic.
+
+`framework/target_checker.py` is the orchestration point.  After simulation
+and target checks both pass, it is the natural place to dispatch to a hardware
+backend.  A `--backend hw` flag alongside `--target` would be sufficient to
+activate it.
+
+The readiness report JSON (`artifacts/reports/.../target_readiness.json`)
+provides a machine-readable go/no-go signal for a Phase 6 dispatch step.

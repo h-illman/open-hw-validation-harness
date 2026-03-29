@@ -31,3 +31,24 @@ sim:
 artifacts:
   results_xml: artifacts/results_your_project_name.xml
   waves_dir:   artifacts/waves/
+
+# ---------------------------------------------------------------------------
+# Phase 5: target board (optional)
+#
+# Add this block to enable target-aware pre-lab checks.
+# The 'board' key is the only required field inside target:.
+# All other fields are optional — omit any you don't need yet.
+#
+# Run: python scripts/run_regression.py --project your_project_name --target de10_standard
+# Or:  python scripts/run_regression.py --target-only --project your_project_name
+#
+# Available board IDs:  de10_standard  |  de0_cv
+# ---------------------------------------------------------------------------
+# target:
+#   board: de10_standard            # required — which board you plan to use
+#   clock_source: CLOCK_50          # optional — must match a board clock name
+#   target_clock_mhz: 50            # optional — your design's clock frequency
+#   io_standard: "3.3V LVTTL"       # optional — your I/O voltage standard
+#   resource_estimate:              # optional — rough pre-lab resource check
+#     luts: 500
+#     ffs:  200
